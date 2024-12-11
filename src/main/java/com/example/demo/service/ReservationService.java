@@ -1,15 +1,17 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.ReservationResponseDto;
-import com.example.demo.entity.Item;
-import com.example.demo.entity.RentalLog;
-import com.example.demo.entity.Reservation;
-import com.example.demo.entity.User;
+import com.example.demo.entity.*;
 import com.example.demo.exception.ReservationConflictException;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.UserRepository;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.PersistenceContext;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,11 +30,13 @@ public class ReservationService {
     public ReservationService(ReservationRepository reservationRepository,
                               ItemRepository itemRepository,
                               UserRepository userRepository,
-                              RentalLogService rentalLogService) {
+                              RentalLogService rentalLogService,
+                              EntityManager em) {
         this.reservationRepository = reservationRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.rentalLogService = rentalLogService;
+        this.em = em;
     }
 
     // TODO: 1. 트랜잭션 이해
@@ -87,9 +91,22 @@ public class ReservationService {
     }
 
     // TODO: 5. QueryDSL 검색 개선
+    /**
+     * EntityManager 를 선언하고
+     * QReservation 을 선언하여
+     * 쿼리 DSL 을 작성해줍니다.
+     */
+    @PersistenceContext
+    private final EntityManager em;
     public List<ReservationResponseDto> searchAndConvertReservations(Long userId, Long itemId) {
-
-        List<Reservation> reservations = searchReservations(userId, itemId);
+//        List<Reservation> reservations = searchReservations(userId, itemId);
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
+        QReservation reservation = QReservation.reservation;
+        List<Reservation> reservations = jpaQueryFactory
+                .selectFrom(reservation)
+                .where(reservation.user.id.eq(userId)
+                        .and(reservation.item.id.eq(itemId)))
+                .fetch();
 
         return convertToDto(reservations);
     }
@@ -120,6 +137,7 @@ public class ReservationService {
     }
 
     // TODO: 7. 리팩토링
+    // PENDING, APPROVED, CANCELED, EXPIRED
     @Transactional
     public void updateReservationStatus(Long reservationId, String status) {
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new IllegalArgumentException("해당 ID에 맞는 데이터가 존재하지 않습니다."));
