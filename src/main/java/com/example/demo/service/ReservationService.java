@@ -9,6 +9,7 @@ import com.example.demo.exception.ReservationConflictException;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.UserRepository;
+import jakarta.persistence.FetchType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,13 @@ public class ReservationService {
     }
 
     // TODO: 1. 트랜잭션 이해
+    /**
+     * @Transactional 을 적용하여 메소드 전체를 하나의 로직으로 구성합니다.
+     * @Transactional 이 적용된 메소드 내에서 예외가 발생한다면 이미 정상 실행 되었던 부분을 실행하기 전으로 되돌리는 작업을 실행합니다.
+     * 즉, 하나의 예외라도 발생한다면 이 메소드를 실행하기 전과 같은 상태로 돌아갑니다.
+     * All or Nothing
+     */
+    @Transactional
     public void createReservation(Long itemId, Long userId, LocalDateTime startAt, LocalDateTime endAt) {
         // 쉽게 데이터를 생성하려면 아래 유효성검사 주석 처리
         List<Reservation> haveReservations = reservationRepository.findConflictingReservations(itemId, startAt, endAt);
@@ -48,10 +56,19 @@ public class ReservationService {
         Reservation savedReservation = reservationRepository.save(reservation);
 
         RentalLog rentalLog = new RentalLog(savedReservation, "로그 메세지", "CREATE");
-        rentalLogService.save(rentalLog);
+        rentalLogService.save(rentalLog); // 여기서 NULL 발생
     }
 
     // TODO: 3. N+1 문제
+    /**
+     * 1. 엔티티의 @ManyToOne의 fetch 속성에 FetchType.LAZY 속성을 설정해줍니다. 기본은 FetchType.EAGER
+     * 2. findAll 메소드에 jqpl 쿼리를 직접 JOIN FETCH 속성을 넣어 줍니다.
+     * @Query("SELECT r " +
+     *             "FROM Reservation r " +
+     *             "JOIN FETCH r.user " +
+     *             "JOIN FETCH r.item")
+     * List<Reservation> findAll();
+     */
     public List<ReservationResponseDto> getReservations() {
         List<Reservation> reservations = reservationRepository.findAll();
 
