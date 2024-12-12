@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.constants.Status;
 import com.example.demo.dto.ReservationResponseDto;
 import com.example.demo.entity.*;
 import com.example.demo.exception.ReservationConflictException;
@@ -8,16 +9,12 @@ import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.UserRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.PersistenceContext;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
@@ -56,7 +53,7 @@ public class ReservationService {
 
         Item item = itemRepository.findById(itemId).orElseThrow(() -> new IllegalArgumentException("해당 ID에 맞는 값이 존재하지 않습니다."));
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("해당 ID에 맞는 값이 존재하지 않습니다."));
-        Reservation reservation = new Reservation(item, user, "PENDING", startAt, endAt);
+        Reservation reservation = new Reservation(item, user, Status.PENDING, startAt, endAt);
         Reservation savedReservation = reservationRepository.save(reservation);
 
         RentalLog rentalLog = new RentalLog(savedReservation, "로그 메세지", "CREATE");
@@ -136,29 +133,45 @@ public class ReservationService {
                 .toList();
     }
 
-    // TODO: 7. 리팩토링
+    // TODO: 7. 리팩토링 아직 도전 중
+    /**
+     * Status enum을 선언하고, String 형식으로 받아오기때문에 enum에 String 형식을 추가해준 후
+     * 비교를 해 줍니다.
+     * 엔티티에서 String 타입을 enum Status 로 변경해 준 후
+     * @Enumerated(EnumType.STRING) 어노테이션을 선언해 줍니다.
+     */
     // PENDING, APPROVED, CANCELED, EXPIRED
     @Transactional
-    public void updateReservationStatus(Long reservationId, String status) {
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new IllegalArgumentException("해당 ID에 맞는 데이터가 존재하지 않습니다."));
+    public ReservationResponseDto updateReservationStatus(Long reservationId, String statusStr) {
 
-        if ("APPROVED".equals(status)) {
-            if (!"PENDING".equals(reservation.getStatus())) {
-                throw new IllegalArgumentException("PENDING 상태만 APPROVED로 변경 가능합니다.");
-            }
-            reservation.updateStatus("APPROVED");
-        } else if ("CANCELED".equals(status)) {
-            if ("EXPIRED".equals(reservation.getStatus())) {
-                throw new IllegalArgumentException("EXPIRED 상태인 예약은 취소할 수 없습니다.");
-            }
-            reservation.updateStatus("CANCELED");
-        } else if ("EXPIRED".equals(status)) {
-            if (!"PENDING".equals(reservation.getStatus())) {
-                throw new IllegalArgumentException("PENDING 상태만 EXPIRED로 변경 가능합니다.");
-            }
-            reservation.updateStatus("EXPIRED");
-        } else {
-            throw new IllegalArgumentException("올바르지 않은 상태: " + status);
+        if(!Status.EXPIRED.getValue().equals(statusStr.toUpperCase())
+                && !Status.PENDING.getValue().equals(statusStr.toUpperCase())
+                && !Status.APPROVED.getValue().equals(statusStr.toUpperCase())
+                && !Status.CANCELED.getValue().equals(statusStr.toUpperCase())){
+            throw new IllegalArgumentException("올바르지 않은 상태: " + statusStr.toUpperCase());
         }
+
+        Status status = Status.valueOf(statusStr.toUpperCase());
+        Reservation reservation = reservationRepository.findByIdOrElseThrow(reservationId);
+
+        Status oldStatus = reservation.getStatus();
+
+        if((Status.APPROVED.equals(status) || Status.EXPIRED.equals(status))
+                && !Status.PENDING.equals(oldStatus)){
+            throw new IllegalArgumentException("PENDING 상태만 " + status + "로 변경 가능합니다.");
+        }
+
+        if(Status.CANCELED.equals(status) && Status.EXPIRED.equals(oldStatus)){
+            throw new IllegalArgumentException("EXPIRED 상태인 예약은 취소할 수 없습니다.");
+        }
+
+        reservation.updateStatus(status);
+        return new ReservationResponseDto(
+                reservation.getId(),
+                reservation.getUser().getNickname(),
+                reservation.getItem().getName(),
+                reservation.getStartAt(),
+                reservation.getEndAt()
+        );
     }
 }
