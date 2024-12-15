@@ -12,8 +12,7 @@ import org.hibernate.annotations.DynamicInsert;
 @DynamicInsert
 // TODO: 6. Dynamic Insert
 /**
- * @DynamicInsert를 추가하고 status 컬럼 어노테이션
- * @Column의 nullable = true 로 변경합니다.
+ * @DynamicInsert를 추가
  */
 public class Item {
     @Id

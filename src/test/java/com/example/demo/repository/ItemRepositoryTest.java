@@ -5,6 +5,7 @@ import com.example.demo.entity.User;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
  * 저장이되는지 검사, 이때 주어진 기본값은 "PENDING"입니다.
  */
 @ActiveProfiles("test")
-@Transactional
 @SpringBootTest
 class ItemRepositoryTest{
 
@@ -37,7 +37,7 @@ class ItemRepositoryTest{
         itemRepository.saveAndFlush(item);
 
         // Then
-        Item newItem = itemRepository.findById(item.getId()).orElse(null);
+        Item newItem = itemRepository.findById(item.getId()).get();
         System.out.println("New Status : " + newItem.getStatus());
         Assertions.assertEquals("PENDING", newItem.getStatus());
     }

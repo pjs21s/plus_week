@@ -44,7 +44,7 @@ public class ReservationService {
      * All or Nothing
      */
     @Transactional
-    public void createReservation(Long itemId, Long userId, LocalDateTime startAt, LocalDateTime endAt) {
+    public ReservationResponseDto createReservation(Long itemId, Long userId, LocalDateTime startAt, LocalDateTime endAt) {
         // 쉽게 데이터를 생성하려면 아래 유효성검사 주석 처리
         List<Reservation> haveReservations = reservationRepository.findConflictingReservations(itemId, startAt, endAt);
         if(!haveReservations.isEmpty()) {
@@ -58,6 +58,13 @@ public class ReservationService {
 
         RentalLog rentalLog = new RentalLog(savedReservation, "로그 메세지", "CREATE");
         rentalLogService.save(rentalLog); // 여기서 NULL 발생
+        return new ReservationResponseDto(
+                savedReservation.getId(),
+                savedReservation.getUser().getNickname(),
+                savedReservation.getItem().getName(),
+                savedReservation.getStartAt(),
+                savedReservation.getEndAt()
+        );
     }
 
     // TODO: 3. N+1 문제
@@ -133,7 +140,7 @@ public class ReservationService {
                 .toList();
     }
 
-    // TODO: 7. 리팩토링 아직 도전 중
+    // TODO: 7. 리팩토링
     /**
      * Status enum을 선언하고, String 형식으로 받아오기때문에 enum에 String 형식을 추가해준 후
      * 비교를 해 줍니다.
