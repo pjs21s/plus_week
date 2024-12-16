@@ -19,11 +19,11 @@ public class ReservationController {
     }
 
     @PostMapping
-    public void createReservation(@RequestBody ReservationRequestDto reservationRequestDto) {
-        reservationService.createReservation(reservationRequestDto.getItemId(),
+    public ResponseEntity<ReservationResponseDto> createReservation(@RequestBody ReservationRequestDto reservationRequestDto) {
+        return ResponseEntity.ok().body(reservationService.createReservation(reservationRequestDto.getItemId(),
                                             reservationRequestDto.getUserId(),
                                             reservationRequestDto.getStartAt(),
-                                            reservationRequestDto.getEndAt());
+                                            reservationRequestDto.getEndAt()));
     }
 
     @PatchMapping("/{id}/update-status")

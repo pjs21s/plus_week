@@ -51,10 +51,10 @@ class ReservationServiceTest {
         LocalDateTime endTime = LocalDateTime.now().plusMinutes(5);
         User owner = new User("user", "owner@a.com", "owner", "0000");
         User manager = new User("user", "manager@a.com", "manager", "0000");
+        owner = mockUserRepository.save(owner);
+        manager = mockUserRepository.save(manager);
         Item item = new Item("testItem", "item description", manager, owner);
-        mockUserRepository.save(owner);
-        mockUserRepository.save(manager);
-        mockItemRepository.save(item);
+        item = mockItemRepository.save(item);
         Reservation reservation = new Reservation(item, owner, Status.PENDING, LocalDateTime.now(), LocalDateTime.now());
 
         // When
@@ -63,11 +63,11 @@ class ReservationServiceTest {
 //        when(mockReservationRepository.save(reservation)).thenReturn(reservation);
 //        ReservationResponseDto result = mockReservationService.searchAndConvertReservations(userId, itemId).getFirst();
 //        List<Reservation> result = mockReservationService.searchReservations(owner.getId(), item.getId());
-//        mockReservationService.createReservation(1L, 1L, reservation.getStartAt(), reservation.getEndAt());
+        mockReservationService.createReservation(item.getId(), owner.getId(), reservation.getStartAt(), reservation.getEndAt());
         Reservation result = mockReservationRepository.findById(1L).orElse(null);
+
         // Then
-//        assertThat(result).isNotNull();
-        assertThat(result).isNull();
+        assertThat(result).isNotNull();
 //        assertThat(result.getItem()).isEqualTo(reservation.getId());
 //        verify(mockReservationRepository, times(1)).save(any(Reservation.class));
     }

@@ -2,11 +2,15 @@ package com.example.demo.repository;
 
 import com.example.demo.entity.Item;
 import com.example.demo.entity.User;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,8 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
  * 저장이되는지 검사, 이때 주어진 기본값은 "PENDING"입니다.
  */
 @ActiveProfiles("test")
-@SpringBootTest
-//@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@DataJpaTest
 class ItemRepositoryTest{
 
     @Autowired
@@ -29,17 +33,15 @@ class ItemRepositoryTest{
         // Given
         User owner = new User("user", "owner@a.com", "owner", "0000");
         User manager = new User("user", "manager@a.com", "manager", "0000");
-        owner = userRepository.saveAndFlush(owner);
-        manager = userRepository.saveAndFlush(manager);
+        owner = userRepository.save(owner);
+        manager = userRepository.save(manager);
         Item item = new Item("testItem", "item description", manager, owner);
 
         // When
-        System.out.println("Status : " + item.getStatus());
-        itemRepository.saveAndFlush(item);
-
+        Item newItem = itemRepository.saveAndFlush(item);
         // Then
-        Item newItem = itemRepository.findById(item.getId()).get();
-        System.out.println("New Status : " + newItem.getStatus());
-        Assertions.assertEquals("PENDING", newItem.getStatus());
+        Assertions.assertThrows(DataIntegrityViolationException.class, () -> {
+            itemRepository.updateStatusNull(newItem.getId());
+        });
     }
 }

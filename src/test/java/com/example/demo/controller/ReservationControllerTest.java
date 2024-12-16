@@ -56,12 +56,14 @@ public class ReservationControllerTest {
 
         given(reservationService.createReservation(1L, 1L, LocalDateTime.now(), LocalDateTime.now())).willReturn(responseDto);
 
-        //  & Then1
+        //  & Then
         mockMvc.perform(post("/reservations")
                     .content(mapper.writeValueAsString(reservationRequestDto))
                     .contentType(MediaType.APPLICATION_JSON)
                     .session(session))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nickname").value(equalTo(responseDto.getNickname())))
+                .andExpect(jsonPath("$.itemName").value(equalTo(responseDto.getItemName())));
     }
 
     @Test
