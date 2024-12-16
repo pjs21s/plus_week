@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @ActiveProfiles("test")
 @SpringBootTest
+//@DataJpaTest
 class ItemRepositoryTest{
 
     @Autowired

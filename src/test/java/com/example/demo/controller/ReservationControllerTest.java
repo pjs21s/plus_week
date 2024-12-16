@@ -1,32 +1,27 @@
 package com.example.demo.controller;
 
 import com.example.demo.constants.GlobalConstants;
+import com.example.demo.dto.Authentication;
 import com.example.demo.dto.ReservationRequestDto;
 import com.example.demo.dto.ReservationResponseDto;
+import com.example.demo.entity.Role;
 import com.example.demo.service.ReservationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.catalina.mapper.Mapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-//import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -36,67 +31,80 @@ public class ReservationControllerTest {
 
     private MockHttpSession session;
 
-//    @Autowired
-//    private ObjectMapper mapper;
+    @Autowired
+    private ObjectMapper mapper;
 
     @Autowired
     private MockMvc mockMvc;
 
-//    @Autowired
-//    private ReservationService reservationService;
+    @MockitoBean
+    private ReservationService reservationService;
 
     @BeforeEach
     public void setUp() {
+        Authentication authentication = new Authentication(1L, Role.USER);
         session = new MockHttpSession();
-        session.setAttribute(GlobalConstants.USER_AUTH, "test");
+        session.setAttribute(GlobalConstants.USER_AUTH, authentication);
     }
 
     @Test
     @DisplayName("예약 생성")
     void createReservationTest() throws Exception {
-
-
         // Given
-//        ReservationRequestDto reservationRequestDto = new ReservationRequestDto(1L, 1L, LocalDateTime.now(), LocalDateTime.now());
-//        ReservationResponseDto responseDto = new ReservationResponseDto(1L, "name", "item", LocalDateTime.now(), LocalDateTime.now());
+        ReservationRequestDto reservationRequestDto = new ReservationRequestDto(1L, 1L, LocalDateTime.now(), LocalDateTime.now());
+        ReservationResponseDto responseDto = new ReservationResponseDto(1L, "name", "item", LocalDateTime.now(), LocalDateTime.now());
 
-//        given(reservationService.createReservation(1L, 1L, LocalDateTime.now(), LocalDateTime.now())).willReturn(responseDto);
-//        doNothing().when(reservationService).createReservation(anyLong(), anyLong(), any(), any());
+        given(reservationService.createReservation(1L, 1L, LocalDateTime.now(), LocalDateTime.now())).willReturn(responseDto);
 
-        //  & Then1``11
+        //  & Then1
         mockMvc.perform(post("/reservations")
-//                    .content(mapper.writeValueAsString(reservationRequestDto))
+                    .content(mapper.writeValueAsString(reservationRequestDto))
                     .contentType(MediaType.APPLICATION_JSON)
                     .session(session))
                 .andExpect(status().isOk());
-//                .andExpect(jsonPath("$.id").value(1))
-//                .andExpect(jsonPath("$.name").value("name"))
-//                .andExpect(jsonPath("$.item").value("item"));
-
-
     }
 
     @Test
-    void updateReservationTest() {
+    void updateReservationTest() throws Exception {
+        // Given
+        String status = "PENDING";
+        Long id = 1L;
+        ReservationResponseDto responseDto = new ReservationResponseDto(1L, "name", "item", LocalDateTime.now(), LocalDateTime.now());
+        // When
+        given(reservationService.updateReservationStatus(1L, status)).willReturn(responseDto);
+        // Then
+        mockMvc.perform(
+                patch("/reservations/{id}/update-status", id)
+                        .content(status)
+//                        .contentType(String.class)
+                        .session(session))
+                .andExpect(status().isOk());
     }
 
     @Test
-    void findAllTest() {
+    void findAllTest() throws Exception {
+        // Given
+
+        // When
+
+        // Then
+        mockMvc.perform(get("/reservations")
+                        .session(session))
+                .andExpect(status().isOk());
     }
 
     @Test
-    void searchAllTest() {
-//        // Given
-//        String keyword = "test";
-//        List<ReservationResponseDto> responseList = List.of(new ReservationResponseDto(/* 초기화 값 */));
-//        given(reservationService.searchAll(keyword)).willReturn(responseList);
-//        // When
-//        // Then
-//        mockMvc.perform(get("/reservations/search")
-//                        .param("keyword", keyword)
-//                        .accept(MediaType.APPLICATION_JSON))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.length()").value(responseList.size()));
+    void searchAllTest() throws Exception {
+        // Given
+        Long userId = 1L;
+        Long itemId = 1L;
+//        given(reservationService.searchAndConvertReservations(userId, itemId)).willReturn(null);
+        // When
+        // Then
+        mockMvc.perform(get("/reservations/search")
+//                        .param("userId", userId.toString())
+//                        .param("itemId", itemId.toString())
+                        .session(session))
+                .andExpect(status().isOk());
     }
 }
-

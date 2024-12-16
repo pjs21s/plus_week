@@ -11,17 +11,17 @@ import org.springframework.test.context.bean.override.convention.TestBean;
 // https://stir.tistory.com/407
 @TestConfiguration
 public class TestConfig {
-    @Bean
-    public TestBean testReservationService() {
-        return new ReservationService();
-    }
-
-    private final ItemRepository itemRepository;
-    private final UserRepository userRepository;
-    private final RentalLogService rentalLogService;
-
-    @Bean
-    public ReservationRepository reservationRepository() {
-        return new ReservationRepository();
-    }
+//    @Bean
+//    public TestBean testReservationService() {
+//        return new ReservationService();
+//    }
+//
+//    private final ItemRepository itemRepository;
+//    private final UserRepository userRepository;
+//    private final RentalLogService rentalLogService;
+//
+//    @Bean
+//    public ReservationRepository reservationRepository() {
+//        return new ReservationRepository();
+//    }
 }
