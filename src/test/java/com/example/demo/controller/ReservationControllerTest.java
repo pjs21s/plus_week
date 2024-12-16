@@ -19,6 +19,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.BDDMockito.given;
@@ -69,16 +71,16 @@ public class ReservationControllerTest {
     @Test
     void updateReservationTest() throws Exception {
         // Given
-        String status = "PENDING";
+        String status = "CANCELED";
         Long id = 1L;
-        ReservationResponseDto responseDto = new ReservationResponseDto(1L, "name", "item", LocalDateTime.now(), LocalDateTime.now());
+        ReservationResponseDto responseDto = new ReservationResponseDto(id, "name", "item", LocalDateTime.now(), LocalDateTime.now());
         // When
-        given(reservationService.updateReservationStatus(1L, status)).willReturn(responseDto);
+        given(reservationService.updateReservationStatus(id, status)).willReturn(responseDto);
         // Then
         mockMvc.perform(
                 patch("/reservations/{id}/update-status", id)
                         .content(status)
-//                        .contentType(String.class)
+                        .contentType(MediaType.TEXT_PLAIN)
                         .session(session))
                 .andExpect(status().isOk());
     }
@@ -86,27 +88,96 @@ public class ReservationControllerTest {
     @Test
     void findAllTest() throws Exception {
         // Given
-
+        ReservationResponseDto responseDto1 = new ReservationResponseDto(1L, "name1", "item1", LocalDateTime.now(), LocalDateTime.now());
+        ReservationResponseDto responseDto2 = new ReservationResponseDto(2L, "name2", "item2", LocalDateTime.now(), LocalDateTime.now());
+        List<ReservationResponseDto> list = new ArrayList<>();
+        list.add(responseDto1);
+        list.add(responseDto2);
         // When
-
+        given(reservationService.getReservations()).willReturn(list);
         // Then
         mockMvc.perform(get("/reservations")
                         .session(session))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nickname").value(equalTo(responseDto1.getNickname())))
+                .andExpect(jsonPath("$[1].nickname").value(equalTo(responseDto2.getNickname())));
     }
 
     @Test
-    void searchAllTest() throws Exception {
+    @DisplayName("다건 조회 by userId and itemId")
+    void searchAllTest_userIdAndItemId() throws Exception {
         // Given
         Long userId = 1L;
         Long itemId = 1L;
-//        given(reservationService.searchAndConvertReservations(userId, itemId)).willReturn(null);
+        ReservationResponseDto responseDto1 = new ReservationResponseDto(1L, "name1", "item1", LocalDateTime.now(), LocalDateTime.now());
+        ReservationResponseDto responseDto2 = new ReservationResponseDto(2L, "name1", "item1", LocalDateTime.now(), LocalDateTime.now());
+        List<ReservationResponseDto> list = new ArrayList<>();
+        list.add(responseDto1);
+        list.add(responseDto2);
         // When
+        given(reservationService.searchAndConvertReservations(userId, itemId)).willReturn(list);
+
         // Then
         mockMvc.perform(get("/reservations/search")
-//                        .param("userId", userId.toString())
-//                        .param("itemId", itemId.toString())
+                        .param("userId", userId.toString())
+                        .param("itemId", itemId.toString())
                         .session(session))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nickname").value(equalTo(responseDto1.getNickname())))
+                .andExpect(jsonPath("$[0].itemName").value(equalTo(responseDto1.getItemName())))
+                .andExpect(jsonPath("$[1].nickname").value(equalTo(responseDto2.getNickname())))
+                .andExpect(jsonPath("$[1].itemName").value(equalTo(responseDto2.getItemName())));
+    }
+
+    @Test
+    @DisplayName("다건 조회 by userId only")
+    void searchAllTest_userId() throws Exception {
+        // Given
+        Long userId = 1L;
+        Long itemId = 1L;
+        ReservationResponseDto responseDto1 = new ReservationResponseDto(1L, "name1", "item1", LocalDateTime.now(), LocalDateTime.now());
+        ReservationResponseDto responseDto2 = new ReservationResponseDto(2L, "name1", "item2", LocalDateTime.now(), LocalDateTime.now());
+        List<ReservationResponseDto> list = new ArrayList<>();
+        list.add(responseDto1);
+        list.add(responseDto2);
+        // When
+        given(reservationService.searchAndConvertReservations(userId, itemId)).willReturn(list);
+
+        // Then
+        mockMvc.perform(get("/reservations/search")
+                        .param("userId", userId.toString())
+                        .param("itemId", itemId.toString())
+                        .session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nickname").value(equalTo(responseDto1.getNickname())))
+                .andExpect(jsonPath("$[0].itemName").value(equalTo(responseDto1.getItemName())))
+                .andExpect(jsonPath("$[1].nickname").value(equalTo(responseDto2.getNickname())))
+                .andExpect(jsonPath("$[1].itemName").value(equalTo(responseDto2.getItemName())));
+    }
+
+    @Test
+    @DisplayName("다건 조회 by itemId only")
+    void searchAllTest_itemId() throws Exception {
+        // Given
+        Long userId = 1L;
+        Long itemId = 1L;
+        ReservationResponseDto responseDto1 = new ReservationResponseDto(1L, "name1", "item1", LocalDateTime.now(), LocalDateTime.now());
+        ReservationResponseDto responseDto2 = new ReservationResponseDto(2L, "name2", "item1", LocalDateTime.now(), LocalDateTime.now());
+        List<ReservationResponseDto> list = new ArrayList<>();
+        list.add(responseDto1);
+        list.add(responseDto2);
+        // When
+        given(reservationService.searchAndConvertReservations(userId, itemId)).willReturn(list);
+
+        // Then
+        mockMvc.perform(get("/reservations/search")
+                        .param("userId", userId.toString())
+                        .param("itemId", itemId.toString())
+                        .session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nickname").value(equalTo(responseDto1.getNickname())))
+                .andExpect(jsonPath("$[0].itemName").value(equalTo(responseDto1.getItemName())))
+                .andExpect(jsonPath("$[1].nickname").value(equalTo(responseDto2.getNickname())))
+                .andExpect(jsonPath("$[1].itemName").value(equalTo(responseDto2.getItemName())));
     }
 }
