@@ -46,10 +46,6 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
-
 jacocoTestReport {
     dependsOn test // 테스트 이후 실행
     reports {
@@ -60,6 +56,22 @@ jacocoTestReport {
         fileTree(dir: it, exclude: ['**/dto/**']) // dto 패키지 제외
     }))
 }
+
+tasks.named('test') {
+    useJUnitPlatform()
+    finalizedBy 'jacocoTestReport' // test가 끝나면 jacocoTestReport 동작
+}
+
+//jacocoTestReport {
+//    reports {
+//        // html로 report 생성하기
+//        // 빌드경로/jacoco/report.html 폴더 내부로 경로 설정
+//        html.destination file("$buildDir/jacoco/report.html")
+//    }
+//
+//    // jacocoTestReport가 끝나면 jacocoTestCoverageVerification 동작
+//    finalizedBy 'jacocoTestCoverageVerification'
+//}
 
 jacocoTestCoverageVerification {
     violationRules {

@@ -4,6 +4,7 @@ import com.example.demo.entity.Item;
 import com.example.demo.entity.User;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -29,6 +30,7 @@ class ItemRepositoryTest{
     private UserRepository userRepository;
 
     @Test
+    @DisplayName("아이템 상태 NOT NULL 확인")
     void itemStatusIsNull(){
         // Given
         User owner = new User("user", "owner@a.com", "owner", "0000");

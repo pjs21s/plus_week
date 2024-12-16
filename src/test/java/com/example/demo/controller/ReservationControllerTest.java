@@ -69,6 +69,7 @@ public class ReservationControllerTest {
     }
 
     @Test
+    @DisplayName("예약 상태 변경")
     void updateReservationTest() throws Exception {
         // Given
         String status = "CANCELED";
@@ -86,6 +87,7 @@ public class ReservationControllerTest {
     }
 
     @Test
+    @DisplayName("예약 전체 조회")
     void findAllTest() throws Exception {
         // Given
         ReservationResponseDto responseDto1 = new ReservationResponseDto(1L, "name1", "item1", LocalDateTime.now(), LocalDateTime.now());

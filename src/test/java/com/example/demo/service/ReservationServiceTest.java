@@ -47,29 +47,26 @@ class ReservationServiceTest {
     @DisplayName("유저 생성")
     void createReservationTest() {
         // Given
-        LocalDateTime startTime = LocalDateTime.now();
-        LocalDateTime endTime = LocalDateTime.now().plusMinutes(5);
         User owner = new User("user", "owner@a.com", "owner", "0000");
         User manager = new User("user", "manager@a.com", "manager", "0000");
-        owner = mockUserRepository.save(owner);
-        manager = mockUserRepository.save(manager);
         Item item = new Item("testItem", "item description", manager, owner);
-        item = mockItemRepository.save(item);
         Reservation reservation = new Reservation(item, owner, Status.PENDING, LocalDateTime.now(), LocalDateTime.now());
 
         // When
-//        mockReservationService.createReservation(itemId, userId, startTime, endTime);
-//        Reservation result = mockReservationRepository.findById(fakeId).get();
-//        when(mockReservationRepository.save(reservation)).thenReturn(reservation);
-//        ReservationResponseDto result = mockReservationService.searchAndConvertReservations(userId, itemId).getFirst();
-//        List<Reservation> result = mockReservationService.searchReservations(owner.getId(), item.getId());
-        mockReservationService.createReservation(item.getId(), owner.getId(), reservation.getStartAt(), reservation.getEndAt());
-        Reservation result = mockReservationRepository.findById(1L).orElse(null);
+        when(mockItemRepository.findById(any())).thenReturn(Optional.of(item));
+        when(mockUserRepository.findById(any())).thenReturn(Optional.of(owner));
+        when(mockReservationRepository.save(any())).thenReturn(reservation);
+        ReservationResponseDto result;
+        result = mockReservationService.createReservation(
+                reservation.getItem().getId(),
+                reservation.getUser().getId(),
+                reservation.getStartAt(),
+                reservation.getEndAt()
+        );
 
         // Then
         assertThat(result).isNotNull();
-//        assertThat(result.getItem()).isEqualTo(reservation.getId());
-//        verify(mockReservationRepository, times(1)).save(any(Reservation.class));
+        assertThat(result.getNickname()).isEqualTo(reservation.getUser().getNickname());
     }
 
     @Test
