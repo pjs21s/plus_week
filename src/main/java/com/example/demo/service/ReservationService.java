@@ -7,9 +7,11 @@ import com.example.demo.exception.ReservationConflictException;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.UserRepository;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,17 +25,18 @@ public class ReservationService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final RentalLogService rentalLogService;
+    private final JPAQueryFactory jpaQueryFactory;
 
     public ReservationService(ReservationRepository reservationRepository,
                               ItemRepository itemRepository,
                               UserRepository userRepository,
                               RentalLogService rentalLogService,
-                              EntityManager em) {
+                              JPAQueryFactory jpaQueryFactory) {
         this.reservationRepository = reservationRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.rentalLogService = rentalLogService;
-        this.em = em;
+        this.jpaQueryFactory = jpaQueryFactory;
     }
 
     // TODO: 1. 트랜잭션 이해
@@ -100,32 +103,18 @@ public class ReservationService {
      * QReservation 을 선언하여
      * 쿼리 DSL 을 작성해줍니다.
      */
-    @PersistenceContext
-    private final EntityManager em;
     public List<ReservationResponseDto> searchAndConvertReservations(Long userId, Long itemId) {
-//        List<Reservation> reservations = searchReservations(userId, itemId);
-        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
         QReservation reservation = QReservation.reservation;
-        List<Reservation> reservations = jpaQueryFactory
-                .selectFrom(reservation)
-                .where(reservation.user.id.eq(userId)
-                        .and(reservation.item.id.eq(itemId)))
-                .fetch();
-
-        return convertToDto(reservations);
-    }
-
-    public List<Reservation> searchReservations(Long userId, Long itemId) {
-
-        if (userId != null && itemId != null) {
-            return reservationRepository.findByUserIdAndItemId(userId, itemId);
-        } else if (userId != null) {
-            return reservationRepository.findByUserId(userId);
-        } else if (itemId != null) {
-            return reservationRepository.findByItemId(itemId);
-        } else {
-            return reservationRepository.findAll();
+        JPAQuery<Reservation> reservations = jpaQueryFactory.selectFrom(reservation);
+        if(userId != null) {
+            reservations = reservations.where(reservation.user.id.eq(userId));
         }
+        if(itemId != null) {
+            reservations = reservations.where(reservation.item.id.eq(itemId));
+        }
+        List<Reservation> result = reservations.fetch();
+
+        return convertToDto(result);
     }
 
     private List<ReservationResponseDto> convertToDto(List<Reservation> reservations) {
