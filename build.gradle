@@ -62,17 +62,6 @@ tasks.named('test') {
     finalizedBy 'jacocoTestReport' // test가 끝나면 jacocoTestReport 동작
 }
 
-//jacocoTestReport {
-//    reports {
-//        // html로 report 생성하기
-//        // 빌드경로/jacoco/report.html 폴더 내부로 경로 설정
-//        html.destination file("$buildDir/jacoco/report.html")
-//    }
-//
-//    // jacocoTestReport가 끝나면 jacocoTestCoverageVerification 동작
-//    finalizedBy 'jacocoTestCoverageVerification'
-//}
-
 jacocoTestCoverageVerification {
     violationRules {
         rule {
