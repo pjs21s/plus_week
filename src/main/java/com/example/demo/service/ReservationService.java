@@ -25,18 +25,16 @@ public class ReservationService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final RentalLogService rentalLogService;
-    private final JPAQueryFactory jpaQueryFactory;
 
     public ReservationService(ReservationRepository reservationRepository,
                               ItemRepository itemRepository,
                               UserRepository userRepository,
-                              RentalLogService rentalLogService,
-                              JPAQueryFactory jpaQueryFactory) {
+                              RentalLogService rentalLogService
+    ) {
         this.reservationRepository = reservationRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.rentalLogService = rentalLogService;
-        this.jpaQueryFactory = jpaQueryFactory;
     }
 
     // TODO: 1. 트랜잭션 이해
@@ -104,29 +102,7 @@ public class ReservationService {
      * 쿼리 DSL 을 작성해줍니다.
      */
     public List<ReservationResponseDto> searchAndConvertReservations(Long userId, Long itemId) {
-        QReservation reservation = QReservation.reservation;
-        JPAQuery<Reservation> reservations = jpaQueryFactory.selectFrom(reservation);
-        if(userId != null) {
-            reservations = reservations.where(reservation.user.id.eq(userId));
-        }
-        if(itemId != null) {
-            reservations = reservations.where(reservation.item.id.eq(itemId));
-        }
-        List<Reservation> result = reservations.fetch();
-
-        return convertToDto(result);
-    }
-
-    private List<ReservationResponseDto> convertToDto(List<Reservation> reservations) {
-        return reservations.stream()
-                .map(reservation -> new ReservationResponseDto(
-                        reservation.getId(),
-                        reservation.getUser().getNickname(),
-                        reservation.getItem().getName(),
-                        reservation.getStartAt(),
-                        reservation.getEndAt()
-                ))
-                .toList();
+        return reservationRepository.searchAndConvertReservations(userId, itemId);
     }
 
     // TODO: 7. 리팩토링

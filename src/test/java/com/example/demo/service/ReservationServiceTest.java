@@ -37,18 +37,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ReservationServiceTest {
 
-    @TestConfiguration
-    static class MockTestConfig{
-
-        @PersistenceContext
-        private EntityManager em;
-
-        @Bean
-        public JPAQueryFactory jpaQueryFactory(){
-            return new JPAQueryFactory(em);
-        }
-    }
-
     @Mock
     private ReservationRepository mockReservationRepository;
     @Mock
@@ -57,12 +45,6 @@ class ReservationServiceTest {
     private UserRepository mockUserRepository;
     @Mock
     private RentalLogService mockRentalLogService;
-//    @Mock
-//    private EntityManager mockEntityManager;
-    @Mock
-    private JPAQueryFactory jpaQueryFactory;
-    @Mock
-    private JPAQuery<Reservation> query;
 
     @InjectMocks
     private ReservationService mockReservationService;
@@ -112,6 +94,37 @@ class ReservationServiceTest {
     }
 
     @Test
+    @DisplayName("예약 생성 실패 아이템 아이디를 못 찾음")
+    void createReservationTestFailNotFoundItem() {
+        // Given
+        // When
+        when(mockReservationRepository.findConflictingReservations(any(), any(), any())).thenReturn(List.of());
+
+        // Then
+        assertThatThrownBy(() -> mockReservationService.createReservation(null, 1L, LocalDateTime.now(), LocalDateTime.now()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("해당 ID에 맞는 값이 존재하지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("예약 생성 실패 유저 아이디를 못 찾음")
+    void createReservationTestFailNotFoundUser() {
+        // Given
+        User owner = new User("user", "owner@a.com", "owner", "0000");
+        User manager = new User("user", "manager@a.com", "manager", "0000");
+        Item item = new Item("testItem", "item description", manager, owner);
+        Reservation reservation = new Reservation(item, owner, Status.PENDING, LocalDateTime.now(), LocalDateTime.now());
+        // When
+        when(mockReservationRepository.findConflictingReservations(any(), any(), any())).thenReturn(List.of());
+        when(mockItemRepository.findById(any())).thenReturn(Optional.of(item));
+
+        // Then
+        assertThatThrownBy(() -> mockReservationService.createReservation(1L, null, LocalDateTime.now(), LocalDateTime.now()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("해당 ID에 맞는 값이 존재하지 않습니다.");
+    }
+
+    @Test
     void getReservations() {
         // Given
         User owner = new User("user", "owner@a.com", "owner", "0000");
@@ -129,9 +142,8 @@ class ReservationServiceTest {
     }
 
     @Test
-    void searchAndConvertReservations() {
+    void searchAndConvertReservationsSuccess() {
         // Given
-//        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(mockEntityManager);
         User owner = new User("user", "owner@a.com", "owner", "0000");
         User manager = new User("user", "manager@a.com", "manager", "0000");
         Item item = new Item("testItem", "item description", manager, owner);
@@ -141,11 +153,44 @@ class ReservationServiceTest {
         reservations.add(reservation1);
         reservations.add(reservation2);
         // When
-        when(jpaQueryFactory.selectFrom((QReservation)any())).thenReturn(query);
-        when(query.where(any(Predicate.class))).thenReturn(query);
-        when(query.fetch()).thenReturn(reservations);
         List<ReservationResponseDto> results;
         results = mockReservationService.searchAndConvertReservations(1L, 1L);
+        // Then
+        assertThat(results).isNotNull();
+    }
+
+    @Test
+    void searchAndConvertReservationsUserIdIsNull() {
+        // Given
+        User owner = new User("user", "owner@a.com", "owner", "0000");
+        User manager = new User("user", "manager@a.com", "manager", "0000");
+        Item item = new Item("testItem", "item description", manager, owner);
+        Reservation reservation1 = new Reservation(item, owner, Status.PENDING, LocalDateTime.now(), LocalDateTime.now());
+        Reservation reservation2 = new Reservation(item, owner, Status.PENDING, LocalDateTime.now(), LocalDateTime.now());
+        List<Reservation> reservations = new ArrayList<>();
+        reservations.add(reservation1);
+        reservations.add(reservation2);
+        // When
+        List<ReservationResponseDto> results;
+        results = mockReservationService.searchAndConvertReservations(null, 1L);
+        // Then
+        assertThat(results).isNotNull();
+    }
+
+    @Test
+    void searchAndConvertReservationsItemIdIsNull() {
+        // Given
+        User owner = new User("user", "owner@a.com", "owner", "0000");
+        User manager = new User("user", "manager@a.com", "manager", "0000");
+        Item item = new Item("testItem", "item description", manager, owner);
+        Reservation reservation1 = new Reservation(item, owner, Status.PENDING, LocalDateTime.now(), LocalDateTime.now());
+        Reservation reservation2 = new Reservation(item, owner, Status.PENDING, LocalDateTime.now(), LocalDateTime.now());
+        List<Reservation> reservations = new ArrayList<>();
+        reservations.add(reservation1);
+        reservations.add(reservation2);
+        // When
+        List<ReservationResponseDto> results;
+        results = mockReservationService.searchAndConvertReservations(1L, null);
         // Then
         assertThat(results).isNotNull();
     }

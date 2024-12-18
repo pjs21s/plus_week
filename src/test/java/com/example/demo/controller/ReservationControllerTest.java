@@ -7,6 +7,7 @@ import com.example.demo.dto.ReservationResponseDto;
 import com.example.demo.entity.Role;
 import com.example.demo.service.ReservationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,13 +24,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ReservationController.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class ReservationControllerTest {
+class ReservationControllerTest {
 
     private MockHttpSession session;
 
@@ -56,16 +60,17 @@ public class ReservationControllerTest {
         ReservationRequestDto reservationRequestDto = new ReservationRequestDto(1L, 1L, LocalDateTime.now(), LocalDateTime.now());
         ReservationResponseDto responseDto = new ReservationResponseDto(1L, "name", "item", LocalDateTime.now(), LocalDateTime.now());
 
-        given(reservationService.createReservation(1L, 1L, LocalDateTime.now(), LocalDateTime.now())).willReturn(responseDto);
+        given(reservationService.createReservation(anyLong(), anyLong(), any(LocalDateTime.class), any(LocalDateTime.class))).willReturn(responseDto);
 
-        //  & Then
+        // When & Then
         mockMvc.perform(post("/reservations")
                     .content(mapper.writeValueAsString(reservationRequestDto))
                     .contentType(MediaType.APPLICATION_JSON)
                     .session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nickname").value(equalTo(responseDto.getNickname())))
-                .andExpect(jsonPath("$.itemName").value(equalTo(responseDto.getItemName())));
+                .andExpect(jsonPath("$.itemName").value(equalTo(responseDto.getItemName())))
+                .andDo(print());
     }
 
     @Test
@@ -83,7 +88,8 @@ public class ReservationControllerTest {
                         .content(status)
                         .contentType(MediaType.TEXT_PLAIN)
                         .session(session))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andDo(print());
     }
 
     @Test
@@ -102,7 +108,8 @@ public class ReservationControllerTest {
                         .session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].nickname").value(equalTo(responseDto1.getNickname())))
-                .andExpect(jsonPath("$[1].nickname").value(equalTo(responseDto2.getNickname())));
+                .andExpect(jsonPath("$[1].nickname").value(equalTo(responseDto2.getNickname())))
+                .andDo(print());
     }
 
     @Test
@@ -128,7 +135,8 @@ public class ReservationControllerTest {
                 .andExpect(jsonPath("$[0].nickname").value(equalTo(responseDto1.getNickname())))
                 .andExpect(jsonPath("$[0].itemName").value(equalTo(responseDto1.getItemName())))
                 .andExpect(jsonPath("$[1].nickname").value(equalTo(responseDto2.getNickname())))
-                .andExpect(jsonPath("$[1].itemName").value(equalTo(responseDto2.getItemName())));
+                .andExpect(jsonPath("$[1].itemName").value(equalTo(responseDto2.getItemName())))
+                .andDo(print());
     }
 
     @Test
@@ -154,7 +162,8 @@ public class ReservationControllerTest {
                 .andExpect(jsonPath("$[0].nickname").value(equalTo(responseDto1.getNickname())))
                 .andExpect(jsonPath("$[0].itemName").value(equalTo(responseDto1.getItemName())))
                 .andExpect(jsonPath("$[1].nickname").value(equalTo(responseDto2.getNickname())))
-                .andExpect(jsonPath("$[1].itemName").value(equalTo(responseDto2.getItemName())));
+                .andExpect(jsonPath("$[1].itemName").value(equalTo(responseDto2.getItemName())))
+                .andDo(print());
     }
 
     @Test
@@ -180,6 +189,7 @@ public class ReservationControllerTest {
                 .andExpect(jsonPath("$[0].nickname").value(equalTo(responseDto1.getNickname())))
                 .andExpect(jsonPath("$[0].itemName").value(equalTo(responseDto1.getItemName())))
                 .andExpect(jsonPath("$[1].nickname").value(equalTo(responseDto2.getNickname())))
-                .andExpect(jsonPath("$[1].itemName").value(equalTo(responseDto2.getItemName())));
+                .andExpect(jsonPath("$[1].itemName").value(equalTo(responseDto2.getItemName())))
+                .andDo(print());
     }
 }

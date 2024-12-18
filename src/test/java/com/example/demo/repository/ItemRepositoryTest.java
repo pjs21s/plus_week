@@ -1,19 +1,18 @@
 package com.example.demo.repository;
 
+import com.example.demo.config.TestConfig;
 import com.example.demo.entity.Item;
 import com.example.demo.entity.User;
-import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * item 의 status 가 지정되지 않아 null 일때,
@@ -22,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DataJpaTest
+@Import(TestConfig.class)
 class ItemRepositoryTest{
 
     @Autowired
@@ -31,6 +31,7 @@ class ItemRepositoryTest{
 
     @Test
     @DisplayName("아이템 상태 NOT NULL 확인")
+    @Transactional
     void itemStatusIsNull(){
         // Given
         User owner = new User("user", "owner@a.com", "owner", "0000");

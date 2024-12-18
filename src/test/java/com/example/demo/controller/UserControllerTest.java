@@ -69,7 +69,6 @@ class UserControllerTest {
         MockHttpSession session = new MockHttpSession();
         // When
         when(userService.loginUser(any())).thenReturn(authentication);
-//        when(request.getSession()).thenReturn(session);
         // Then
         mockMvc.perform(post("/users/login")
                 .contentType(MediaType.APPLICATION_JSON)
