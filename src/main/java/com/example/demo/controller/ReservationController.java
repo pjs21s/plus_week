@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.constants.Status;
+import java.util.List;
 import com.example.demo.dto.ReservationRequestDto;
 import com.example.demo.dto.ReservationResponseDto;
 import com.example.demo.service.ReservationService;
@@ -19,11 +19,11 @@ public class ReservationController {
     }
 
     @PostMapping
-    public void createReservation(@RequestBody ReservationRequestDto reservationRequestDto) {
-        reservationService.createReservation(reservationRequestDto.getItemId(),
+    public ResponseEntity<ReservationResponseDto> createReservation(@RequestBody ReservationRequestDto reservationRequestDto) {
+        return ResponseEntity.ok().body(reservationService.createReservation(reservationRequestDto.getItemId(),
                                             reservationRequestDto.getUserId(),
                                             reservationRequestDto.getStartAt(),
-                                            reservationRequestDto.getEndAt());
+                                            reservationRequestDto.getEndAt()));
     }
 
     @PatchMapping("/{id}/update-status")
@@ -32,13 +32,13 @@ public class ReservationController {
     }
 
     @GetMapping
-    public void findAll() {
-        reservationService.getReservations();
+    public ResponseEntity<List<ReservationResponseDto>> findAll() {
+        return ResponseEntity.ok().body(reservationService.getReservations());
     }
 
     @GetMapping("/search")
-    public void searchAll(@RequestParam(required = false) Long userId,
+    public ResponseEntity<List<ReservationResponseDto>> searchAll(@RequestParam(required = false) Long userId,
                           @RequestParam(required = false) Long itemId) {
-        reservationService.searchAndConvertReservations(userId, itemId);
+        return ResponseEntity.ok().body(reservationService.searchAndConvertReservations(userId, itemId));
     }
 }

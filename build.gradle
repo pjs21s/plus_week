@@ -43,13 +43,8 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     compileOnly 'org.projectlombok:lombok'
 
-    runtimeOnly 'com.h2database:h2'
-
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
+    testImplementation 'org.mockito:mockito-core'
 }
 
 jacocoTestReport {
@@ -59,8 +54,18 @@ jacocoTestReport {
         html.outputLocation.set(file("$buildDir/jacoco/report.html")) // 리포트 생성 위치
     }
     classDirectories.setFrom(files(classDirectories.files.collect {
-        fileTree(dir: it, exclude: ['**/dto/**']) // dto 패키지 제외
+        fileTree(dir: it, exclude: [
+                "**/dto/**",
+                "**/entity/**",
+                "**/filter/**",
+                "**/interceptor/**"
+        ])
     }))
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    finalizedBy 'jacocoTestReport' // test가 끝나면 jacocoTestReport 동작
 }
 
 jacocoTestCoverageVerification {

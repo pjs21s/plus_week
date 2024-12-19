@@ -7,9 +7,11 @@ import com.example.demo.exception.ReservationConflictException;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.UserRepository;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,13 +29,12 @@ public class ReservationService {
     public ReservationService(ReservationRepository reservationRepository,
                               ItemRepository itemRepository,
                               UserRepository userRepository,
-                              RentalLogService rentalLogService,
-                              EntityManager em) {
+                              RentalLogService rentalLogService
+    ) {
         this.reservationRepository = reservationRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.rentalLogService = rentalLogService;
-        this.em = em;
     }
 
     // TODO: 1. 트랜잭션 이해
@@ -100,44 +101,8 @@ public class ReservationService {
      * QReservation 을 선언하여
      * 쿼리 DSL 을 작성해줍니다.
      */
-    @PersistenceContext
-    private final EntityManager em;
     public List<ReservationResponseDto> searchAndConvertReservations(Long userId, Long itemId) {
-//        List<Reservation> reservations = searchReservations(userId, itemId);
-        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
-        QReservation reservation = QReservation.reservation;
-        List<Reservation> reservations = jpaQueryFactory
-                .selectFrom(reservation)
-                .where(reservation.user.id.eq(userId)
-                        .and(reservation.item.id.eq(itemId)))
-                .fetch();
-
-        return convertToDto(reservations);
-    }
-
-    public List<Reservation> searchReservations(Long userId, Long itemId) {
-
-        if (userId != null && itemId != null) {
-            return reservationRepository.findByUserIdAndItemId(userId, itemId);
-        } else if (userId != null) {
-            return reservationRepository.findByUserId(userId);
-        } else if (itemId != null) {
-            return reservationRepository.findByItemId(itemId);
-        } else {
-            return reservationRepository.findAll();
-        }
-    }
-
-    private List<ReservationResponseDto> convertToDto(List<Reservation> reservations) {
-        return reservations.stream()
-                .map(reservation -> new ReservationResponseDto(
-                        reservation.getId(),
-                        reservation.getUser().getNickname(),
-                        reservation.getItem().getName(),
-                        reservation.getStartAt(),
-                        reservation.getEndAt()
-                ))
-                .toList();
+        return reservationRepository.searchAndConvertReservations(userId, itemId);
     }
 
     // TODO: 7. 리팩토링
